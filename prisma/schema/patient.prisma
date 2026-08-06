@@ -1,0 +1,24 @@
+model patient {
+    id            String    @id @default(uuid())
+    name          String
+    email         String    @unique
+    profilePhoto  String?
+    contactNumber String?
+    address       String?
+    isDeleted     Boolean   @default(false)
+    deletedAt     DateTime?
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+
+
+// relation
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id] , onDelete:Cascade , onUpdate:Cascade)
+
+
+    //indexing 
+
+    @@index([email], name: "idx-patient_email")
+    @@index([isDeleted], name:"idx-patient-deleted")
+    @@map("patients")
+}

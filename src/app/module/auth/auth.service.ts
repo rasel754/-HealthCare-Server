@@ -10,27 +10,53 @@ interface IRegisterPatientPayload {
 }
 
 const registerPatient = async (payload: IRegisterPatientPayload) => {
-    const { name, email, password } = payload;
+    let createdUserId: string | undefined;
+    try {
+        const { name, email, password } = payload;
 
-    const data = await auth.api.signUpEmail({
-        body: {
-            name,
-            email,
-            password,
-            role: Role.PATIENT,
+        const data = await auth.api.signUpEmail({
+            body: {
+                name,
+                email,
+                password,
+                role: Role.PATIENT,
+            }
+        })
+        if (!data.user) {
+            throw new Error("Failed to register patient");
         }
-    })
-    if (!data.user) {
-        throw new Error("Fialed to register patient");
+        createdUserId = data.user.id;
+
+        const patient = await prisma.$transaction(async (tx) => {
+            const patientTx = await tx.patient.create({
+                data: {
+                    userId: data.user.id,
+                    name: name,
+                    email: payload.email
+
+                }
+            })
+            return patientTx;
+
+        })
+
+
+        return {
+            ...data,
+            patient
+        }
+    } catch (error) {
+        console.error("Error in patient registration:", error);
+
+        if (createdUserId) {
+            await prisma.user.delete({
+                where: {
+                    id: createdUserId
+                }
+            })
+        }
+        throw error
     }
-
-    // const patient = await prisma.$transaction(async (tx) => {
-
-    // })
-
-
-    return data
-
 }
 
 interface ILoginUserPayload {
@@ -49,12 +75,12 @@ const loginUser = async (payload: ILoginUserPayload) => {
             password
         }
     })
-   if(data.user.status === UserStatus.BLOCKED){
-    throw new Error("Account is blocked");
-   }
-   if(data.user.isDeleted ||data.user.status === UserStatus.DELETED){
-    throw new Error("Account is deleted");
-   }
+    if (data.user.status === UserStatus.BLOCKED) {
+        throw new Error("Account is blocked");
+    }
+    if (data.user.isDeleted || data.user.status === UserStatus.DELETED) {
+        throw new Error("Account is deleted");
+    }
 
     return data.user
 }

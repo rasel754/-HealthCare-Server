@@ -401,7 +401,8 @@ export const ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  patient: 'patient'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -417,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "specialty" | "user" | "session" | "account" | "verification"
+    modelProps: "specialty" | "user" | "session" | "account" | "verification" | "patient"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -791,6 +792,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    patient: {
+      payload: Prisma.$patientPayload<ExtArgs>
+      fields: Prisma.patientFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.patientFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.patientFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>
+        }
+        findFirst: {
+          args: Prisma.patientFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.patientFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>
+        }
+        findMany: {
+          args: Prisma.patientFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>[]
+        }
+        create: {
+          args: Prisma.patientCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>
+        }
+        createMany: {
+          args: Prisma.patientCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.patientCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>[]
+        }
+        delete: {
+          args: Prisma.patientDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>
+        }
+        update: {
+          args: Prisma.patientUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>
+        }
+        deleteMany: {
+          args: Prisma.patientDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.patientUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.patientUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>[]
+        }
+        upsert: {
+          args: Prisma.patientUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$patientPayload>
+        }
+        aggregate: {
+          args: Prisma.PatientAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePatient>
+        }
+        groupBy: {
+          args: Prisma.patientGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PatientGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.patientCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PatientCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -905,6 +980,23 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const PatientScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  profilePhoto: 'profilePhoto',
+  contactNumber: 'contactNumber',
+  address: 'address',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type PatientScalarFieldEnum = (typeof PatientScalarFieldEnum)[keyof typeof PatientScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1169,6 +1261,7 @@ export type GlobalOmitConfig = {
   session?: Prisma.SessionOmit
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit
+  patient?: Prisma.patientOmit
 }
 
 /* Types for Logging */
