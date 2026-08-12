@@ -17,20 +17,15 @@ app.use("/api/v1", indexRouter)
 
 
 // Basic route
-app.get('/', async (req: Request, res: Response) => {
+// app.get('/', async (req: Request, res: Response) => {
+// throw new AppError(status.BAD_REQUEST,"just testin error handeler ")
 
-  const specialty = await prisma.specialty.create({
-    data: {
-      title: "cardiology"
-    }
-  })
-
-  res.status(200).json({
-    success: true,
-    message: "Specialty created successfully",
-    data: specialty
-  })
-});
+//   res.status(200).json({
+//     success: true,
+//     message: "Specialty created successfully",
+//     data: specialty
+//   })
+// });
 
 
 

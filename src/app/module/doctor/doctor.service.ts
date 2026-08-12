@@ -1,3 +1,5 @@
+import status from "http-status";
+import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { IUpdateDoctorPayload, IUpdateDoctorSpecialtyPayload } from "./doctor.interface";
 
@@ -27,7 +29,7 @@ const getDoctorById = async (id: string) => {
         }
     });
     if (!result) {
-        throw new Error("Doctor not found");
+        throw new AppError(status.BAD_REQUEST, 'Doctor not found');
     }
     return result;
 };
@@ -89,7 +91,7 @@ const updateDoctor = async (id: string, payload: IUpdateDoctorPayload) => {
             });
 
             if (existingDoctorWithReg) {
-                throw new Error(`Registration number '${doctorData.registrationNumber}' is already in use by another doctor.`);
+                throw new AppError(status.BAD_REQUEST, 'Registration number is already in use by another doctor.');
             }
         }
 

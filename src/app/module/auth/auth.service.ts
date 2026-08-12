@@ -2,6 +2,9 @@ import { email, string } from "better-auth";
 import { Role, UserStatus } from "../../../generated/prisma/client";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
+import AppError from "../../errorHelpers/AppError";
+import status from "http-status";
+import { tokenUtils } from "../../utils/token";
 
 interface IRegisterPatientPayload {
     name: string,
@@ -23,7 +26,7 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
             }
         })
         if (!data.user) {
-            throw new Error("Failed to register patient");
+            throw new AppError(status.BAD_REQUEST, 'Failed to register patient');
         }
         createdUserId = data.user.id;
 
@@ -39,11 +42,31 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
             return patientTx;
 
         })
+        const accessToken = tokenUtils.getAccessToken({
+        userId: data.user.id,
+        role: data.user.role,
+        name: data.user.name,
+        email: data.user.email,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted,
+        emailVerified: data.user.emailVerified,
+    })
+    const refreshToken = tokenUtils.getRefreshToken({
+        userId: data.user.id,
+        role: data.user.role,
+        name: data.user.name,
+        email: data.user.email,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted,
+        emailVerified: data.user.emailVerified,
+    })
 
 
         return {
             ...data,
-            patient
+            patient,
+            accessToken,
+            refreshToken
         }
     } catch (error) {
         console.error("Error in patient registration:", error);
@@ -76,13 +99,36 @@ const loginUser = async (payload: ILoginUserPayload) => {
         }
     })
     if (data.user.status === UserStatus.BLOCKED) {
-        throw new Error("Account is blocked");
+        throw new AppError(status.BAD_REQUEST, 'Account is blocked');
     }
     if (data.user.isDeleted || data.user.status === UserStatus.DELETED) {
-        throw new Error("Account is deleted");
+        throw new AppError(status.BAD_REQUEST, 'Account is deleted');
     }
 
-    return data.user
+    const accessToken = tokenUtils.getAccessToken({
+        userId: data.user.id,
+        role: data.user.role,
+        name: data.user.name,
+        email: data.user.email,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted,
+        emailVerified: data.user.emailVerified,
+    })
+    const refreshToken = tokenUtils.getRefreshToken({
+        userId: data.user.id,
+        role: data.user.role,
+        name: data.user.name,
+        email: data.user.email,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted,
+        emailVerified: data.user.emailVerified,
+    })
+
+    return {
+        ...data,
+        accessToken,
+        refreshToken
+    }
 }
 
 
