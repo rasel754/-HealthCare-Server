@@ -3,8 +3,17 @@ import { UserControllers } from "./user.controller";
 import { validateRequest } from "../../middlewares/validateRequest";
 import { createDoctorZodSchema } from "./user.validation";
 
-const router =Router();
+const router = Router();
 
-router.post("/create-doctor",validateRequest(createDoctorZodSchema), UserControllers.createDoctor);
+/**
+ * Route: POST /create-doctor
+ * Description: Registers a new doctor account with associated specialties.
+ * Middlewares: validateRequest(createDoctorZodSchema)
+ */
+router.post(
+    "/create-doctor",
+    validateRequest(createDoctorZodSchema),
+    UserControllers.createDoctor
+);
 
-export const UserRoutes = router;
+export const UserRoutes = router;

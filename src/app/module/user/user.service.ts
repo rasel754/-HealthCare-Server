@@ -5,65 +5,89 @@ import { ICreateDoctorPayload } from "./user.interface";
 import AppError from "../../errorHelpers/AppError";
 import status from "http-status";
 
+/**
+ * Service to register a new Doctor user.
+ * Performs validation, creates authentication account, executes database transactions,
+ * and handles cleanup rollbacks on error.
+ *
+ * Workflow:
+ * 1. Verify existence of all requested specialties in database.
+ * 2. Check if a user with the target email already exists.
+ * 3. Register user credentials with Better-Auth (`auth.api.signUpEmail`).
+ * 4. Perform Prisma transaction to insert `Doctor` record and `DoctorSpecialty` relations.
+ * 5. Roll back auth user registration if database creation fails.
+ *
+ * @param payload - Request payload including doctor info, credentials, and specialty IDs.
+ * @returns The created Doctor record including associated user and specialties data.
+ * @throws AppError - If specialty is invalid, user exists, or account creation fails.
+ */
 const createDoctor = async (payload: ICreateDoctorPayload) => {
     const specialties: Specialty[] = [];
 
+    // Step 1: Validate that every provided specialty ID exists in DB
     for (const specialityId of payload.specialties) {
         const speciality = await prisma.specialty.findUnique({
             where: {
-                id: specialityId
-            }
-        })
+                id: specialityId,
+            },
+        });
 
         if (!speciality) {
-            throw new AppError(status.BAD_REQUEST, `Specialty not found ${specialityId}`)
+            throw new AppError(status.BAD_REQUEST, `Specialty not found ${specialityId}`);
         }
 
-        specialties.push(speciality)
+        specialties.push(speciality);
     }
+
+    // Step 2: Check if user already exists with the given email
     const userExist = await prisma.user.findUnique({
         where: {
-            email: payload.doctor.email
-        }
-    })
+            email: payload.doctor.email,
+        },
+    });
 
     if (userExist) {
-        throw new AppError(status.BAD_REQUEST, `User already exists ${payload.doctor.email}`)
+        throw new AppError(status.BAD_REQUEST, `User already exists ${payload.doctor.email}`);
     }
 
+    // Step 3: Register user account via Better-Auth engine
     const userData = await auth.api.signUpEmail({
         body: {
             email: payload.doctor.email,
             password: payload.password,
             role: Role.DOCTOR,
             name: payload.doctor.name,
-            needPasswordChange: true
-        }
-    })
-
+            needPasswordChange: true,
+        },
+    });
 
     try {
+        // Step 4: Execute database transaction to create Doctor profile and join specialty records
         const result = await prisma.$transaction(async (tx) => {
+            // 4a. Create Doctor profile linked to created User ID
             const doctorData = await tx.doctor.create({
                 data: {
                     userId: userData.user.id,
-                    ...payload.doctor
-                }
-            })
-            const doctorSpecialtyData = specialties.map(specialty => {
+                    ...payload.doctor,
+                },
+            });
+
+            // 4b. Map specialties to DoctorSpecialty join table
+            const doctorSpecialtyData = specialties.map((specialty) => {
                 return {
                     doctorId: doctorData.id,
-                    specialtyId: specialty.id
-                }
-            })
+                    specialtyId: specialty.id,
+                };
+            });
 
             await tx.doctorSpecialty.createMany({
-                data: doctorSpecialtyData
-            })
+                data: doctorSpecialtyData,
+            });
 
+            // 4c. Fetch and return complete Doctor record with relations
             const doctor = await tx.doctor.findUnique({
                 where: {
-                    id: doctorData.id
+                    id: doctorData.id,
                 },
                 select: {
                     id: true,
@@ -80,53 +104,51 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
                     qualification: true,
                     currentWorkingPlace: true,
                     designation: true,
-                    createdAt:true,
-                    updatedAt:true,
+                    createdAt: true,
+                    updatedAt: true,
                     user: {
                         select: {
                             id: true,
                             email: true,
-                            name:true,
+                            name: true,
                             role: true,
-                            status:true,
-                            emailVerified:true,
-                            image:true,
-                            isDeleted:true,
-                            createdAt:true,
-                            updatedAt:true
-                        }
+                            status: true,
+                            emailVerified: true,
+                            image: true,
+                            isDeleted: true,
+                            createdAt: true,
+                            updatedAt: true,
+                        },
                     },
                     specialties: {
                         select: {
                             specialty: {
                                 select: {
                                     title: true,
-                                    id: true
-                                }
-                            }
-                        }
-                    }
-                }
-            })
+                                    id: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
             return doctor;
-        })
-
+        });
 
         return result;
-    }
-    catch (error) {
+    } catch (error) {
+        // Step 5: Rollback - delete created auth user if transaction fails
         console.log("Failed to create user", error);
 
         await prisma.user.delete({
             where: {
-                id: userData.user.id
-            }
-        })
+                id: userData.user.id,
+            },
+        });
         throw error;
     }
-}
-
+};
 
 export const UserServices = {
-    createDoctor
-}
+    createDoctor,
+};
