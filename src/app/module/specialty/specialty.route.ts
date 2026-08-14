@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { SpecialtyController } from "./specialty.controller";
+import { checkAuth } from "../../middlewares/checkAuth";
+import { Role } from "../../../generated/prisma/enums";
 
 const router = Router();
 
@@ -7,24 +9,18 @@ const router = Router();
  * Route: POST /
  * Description: Creates a new medical specialty record.
  */
-router.post('/', SpecialtyController.createSpecialty);
+router.post('/',checkAuth(Role.ADMIN,Role.SUPER_ADMIN), SpecialtyController.createSpecialty);
 
-/**
- * Route: GET /
- * Description: Retrieves all medical specialties.
- */
+
 router.get('/', SpecialtyController.getAllSpecialty);
 
-/**
- * Route: DELETE /:id
- * Description: Deletes a medical specialty record by ID.
- */
-router.delete('/:id', SpecialtyController.deleteSpecialty);
+
+router.delete('/:id', checkAuth(Role.ADMIN, Role.SUPER_ADMIN), SpecialtyController.deleteSpecialty);
 
 /**
  * Route: PATCH /:id
  * Description: Updates a medical specialty record by ID.
  */
-router.patch('/:id', SpecialtyController.updateSpecialty);
+router.patch('/:id', checkAuth(Role.ADMIN, Role.SUPER_ADMIN), SpecialtyController.updateSpecialty);
 
-export const SpecialtyRouter = router;
+export const SpecialtyRouter = router;

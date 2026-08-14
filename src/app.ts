@@ -1,5 +1,5 @@
 import express, { Application, NextFunction, Request, Response } from 'express';
-import { prisma } from './app/lib/prisma';
+import cookieParser from "cookie-parser";
 import { indexRouter } from './app/routes';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
-
+app.use(cookieParser());
 app.use("/api/v1", indexRouter)
 
 
