@@ -63,25 +63,48 @@ export const createDoctorZodSchema = z.object({
 });
 
 /**
- * Zod validation schema for creating an Admin or Super Admin account.
+ * Zod validation schema for creating an Admin account.
  */
 export const createAdminZodSchema = z.object({
     password: z
         .string("Password is required")
-        .min(6, "Password must be at least 6 characters")
-        .max(20, "Password must be at most 20 characters"),
+        .min(6, "Password must be at least 6 characters"),
     admin: z.object({
         name: z
-            .string("Name is required and must be string")
-            .min(5, "Name must be at least 5 characters")
-            .max(30, "Name must be at most 30 characters"),
+            .string("Name is required")
+            .min(1, "Name is required"),
         email: z.email("Invalid email address"),
         contactNumber: z
             .string("Contact number is required")
-            .min(11, "Contact number must be at least 11 characters")
-            .max(14, "Contact number must be at most 15 characters")
+            .min(1, "Contact number is required")
             .optional(),
         profilePhoto: z.url("Profile photo must be a valid URL").optional(),
     }),
-    role: z.enum(["ADMIN", "SUPER_ADMIN"], "Role must be either ADMIN or SUPER_ADMIN"),
-});
+});
+
+/**
+ * Zod validation schema for creating a Super Admin account.
+ */
+export const createSuperAdminZodSchema = z.object({
+    password: z
+        .string("Password is required")
+        .min(6, "Password must be at least 6 characters"),
+    superAdmin: z.object({
+        name: z
+            .string("Name is required")
+            .min(1, "Name is required"),
+        email: z.email("Invalid email address"),
+        contactNumber: z
+            .string("Contact number is required")
+            .min(1, "Contact number is required")
+            .optional(),
+        profilePhoto: z.url("Profile photo must be a valid URL").optional(),
+    }),
+});
+
+export const UserValidation = {
+    createDoctorValidationSchema: createDoctorZodSchema,
+    createAdminValidationSchema: createAdminZodSchema,
+    createSuperAdminValidationSchema: createSuperAdminZodSchema,
+};
+

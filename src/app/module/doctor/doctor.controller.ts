@@ -59,15 +59,9 @@ const updateDoctor = catchAsync(
     }
 );
 
-/**
- * Controller to delete a doctor record by ID.
- *
- * @route DELETE /api/v1/doctor/:id
- * @access Admin
- */
-const deleteDoctor = catchAsync(
+const softDeleteDoctor = catchAsync(
     async (req: Request, res: Response) => {
-        const result = await DoctorService.deleteDoctor(req.params.id as string);
+        const result = await DoctorService.softDeleteDoctor(req.params.id as string);
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
@@ -81,6 +75,8 @@ export const DoctorController = {
     getAllDoctors,
     getDoctorById,
     updateDoctor,
-    deleteDoctor,
+    deleteDoctor: softDeleteDoctor,
+    softDeleteDoctor,
 };
+
 

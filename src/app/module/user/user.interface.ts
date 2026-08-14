@@ -26,3 +26,29 @@ export interface ICreateDoctorPayload {
     /** Array of specialty UUIDs associated with the doctor */
     specialties: string[];
 }
+
+/**
+ * Interface representing the payload required to create a new Admin user.
+ */
+export interface ICreateAdminPayload {
+    password: string;
+    admin: {
+        name: string;
+        email: string;
+        profilePhoto?: string;
+        contactNumber?: string;
+    };
+}
+
+/**
+ * Interface representing the payload required to create a new Super Admin user.
+ */
+export interface ICreateSuperAdminPayload {
+    password: string;
+    superAdmin: {
+        name: string;
+        email: string;
+        profilePhoto?: string;
+        contactNumber?: string;
+    };
+}

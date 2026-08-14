@@ -1,30 +1,52 @@
 import { Router } from "express";
 import { DoctorController } from "./doctor.controller";
+import { checkAuth } from "../../middlewares/checkAuth";
+import { validateRequest } from "../../middlewares/validateRequest";
+import { updateDoctorZodSchema } from "./doctor.validation";
+import { Role } from "../../../generated/prisma/enums";
 
 const router = Router();
 
 /**
  * Route: GET /
- * Description: Fetches all doctor records with associated user and specialty data.
+ * Access: ADMIN, SUPER_ADMIN, DOCTOR
  */
-router.get('/', DoctorController.getAllDoctors);
+router.get(
+    "/",
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.DOCTOR),
+    DoctorController.getAllDoctors
+);
 
 /**
  * Route: GET /:id
- * Description: Fetches a single doctor record by ID.
+ * Access: ADMIN, SUPER_ADMIN, DOCTOR
  */
-router.get('/:id', DoctorController.getDoctorById);
+router.get(
+    "/:id",
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.DOCTOR),
+    DoctorController.getDoctorById
+);
 
 /**
  * Route: PATCH /:id
- * Description: Updates a doctor's basic info, user name, and specialty list.
+ * Access: ADMIN, SUPER_ADMIN, DOCTOR
  */
-router.patch('/:id', DoctorController.updateDoctor);
+router.patch(
+    "/:id",
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.DOCTOR),
+    validateRequest(updateDoctorZodSchema),
+    DoctorController.updateDoctor
+);
 
 /**
  * Route: DELETE /:id
- * Description: Removes a doctor record by ID.
+ * Access: ADMIN, SUPER_ADMIN
  */
-router.delete('/:id', DoctorController.deleteDoctor); 
+router.delete(
+    "/:id",
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+    DoctorController.softDeleteDoctor
+);
 
-export const DoctorRoutes = router;
+export const DoctorRoutes = router;
+

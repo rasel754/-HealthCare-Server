@@ -9,8 +9,17 @@ import { IUpdateDoctorPayload, IUpdateDoctorSpecialtyPayload } from "./doctor.in
  *
  * @returns Array of doctor objects with nested user and specialties.
  */
+/**
+ * Service to retrieve all doctors in the database.
+ * Includes related user account details and specialty mapping details.
+ *
+ * @returns Array of doctor objects with nested user and specialties.
+ */
 export const getAllDoctors = async () => {
     return prisma.doctor.findMany({
+        where: {
+            isDeleted: false,
+        },
         include: {
             user: true,
             specialties: {
@@ -27,11 +36,14 @@ export const getAllDoctors = async () => {
  *
  * @param id - The unique UUID of the doctor.
  * @returns The doctor record with nested relations.
- * @throws AppError - 400 Bad Request if no doctor is found with given ID.
+ * @throws AppError - 404 Not Found if no doctor is found with given ID or if deleted.
  */
 const getDoctorById = async (id: string) => {
     const result = await prisma.doctor.findUnique({
-        where: { id },
+        where: {
+            id,
+            isDeleted: false,
+        },
         include: {
             user: true,
             specialties: {
@@ -42,7 +54,7 @@ const getDoctorById = async (id: string) => {
         },
     });
     if (!result) {
-        throw new AppError(status.BAD_REQUEST, "Doctor not found");
+        throw new AppError(status.NOT_FOUND, "Doctor not found");
     }
     return result;
 };
@@ -103,22 +115,23 @@ const getSpecialtiesToUpdate = async (
  * Service to update doctor profile information and/or assigned specialties.
  * Uses a Prisma transaction to maintain consistency across tables.
  *
- * Workflow:
- * 1. Sanitizes input to prevent overwriting immutable email/userId fields.
- * 2. Validates uniqueness of registration number if provided.
- * 3. Synchronizes doctor name change with the underlying User table.
- * 4. Updates basic Doctor table record.
- * 5. Diff-updates specialty relations (deleting removed IDs, creating new IDs).
- * 6. Returns updated Doctor record with relations.
- *
  * @param id - Doctor ID.
  * @param payload - Partial doctor details and/or specialties array.
  * @returns Updated Doctor object.
  */
-const updateDoctor = async (id: string, payload: IUpdateDoctorPayload) => {
+const updateDoctor = async (id: string, payload: any) => {
+    const existingDoctor = await prisma.doctor.findUnique({
+        where: { id, isDeleted: false },
+    });
+
+    if (!existingDoctor) {
+        throw new AppError(status.NOT_FOUND, "Doctor not found");
+    }
+
     return await prisma.$transaction(async (tx) => {
-        const { doctor, specialties } = payload;
-        const doctorData = { ...doctor };
+        // Handle payload provided either as { doctor: {...}, specialties: [...] } or flat payload
+        const { doctor, specialties, ...restPayload } = payload;
+        const doctorData = { ...(doctor || restPayload) };
 
         // Prevent modification of email and userId via update payload
         delete (doctorData as any).email;
@@ -200,15 +213,29 @@ const updateDoctor = async (id: string, payload: IUpdateDoctorPayload) => {
 };
 
 /**
- * Service to delete a doctor record by ID.
+ * Service to soft delete a doctor record by ID.
  *
- * @param id - Unique UUID of doctor to delete.
- * @returns Deleted Doctor object.
+ * @param id - Unique UUID of doctor to soft delete.
+ * @returns Soft deleted Doctor object.
  */
-const deleteDoctor = async (id: string) => {
-    return prisma.doctor.delete({
-        where: {
-            id: id,
+const softDeleteDoctor = async (id: string) => {
+    const doctor = await prisma.doctor.findUnique({
+        where: { id },
+    });
+
+    if (!doctor) {
+        throw new AppError(status.NOT_FOUND, "Doctor not found");
+    }
+
+    if (doctor.isDeleted) {
+        throw new AppError(status.BAD_REQUEST, "Doctor is already deleted");
+    }
+
+    return prisma.doctor.update({
+        where: { id },
+        data: {
+            isDeleted: true,
+            deletedAt: new Date(),
         },
     });
 };
@@ -217,5 +244,7 @@ export const DoctorService = {
     getAllDoctors,
     getDoctorById,
     updateDoctor,
-    deleteDoctor,
-};
+    deleteDoctor: softDeleteDoctor,
+    softDeleteDoctor,
+};
+
