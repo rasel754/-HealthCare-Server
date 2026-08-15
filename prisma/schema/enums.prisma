@@ -12,9 +12,9 @@ enum UserStatus {
 }
 
 enum Gender {
-    MALE
-    FEMALE
-    OTHER
+  MALE
+  FEMALE
+  OTHER
 }
 
 enum AppointmentStatus {
@@ -45,4 +45,4 @@ enum MaritalStatus {
   UNMARRIED
   DIVORCED
   WIDOWED
-}
+}

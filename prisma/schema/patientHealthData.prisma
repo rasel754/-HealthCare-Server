@@ -21,7 +21,7 @@ model PatientHealthData {
   updatedAt           DateTime      @updatedAt
 
   // Relations
-  patient patient @relation(fields: [patientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("patient_health_data")
 }

@@ -97,15 +97,20 @@ export type DoctorSchedules = Prisma.DoctorSchedulesModel
  */
 export type MedicalReport = Prisma.MedicalReportModel
 /**
- * Model patient
+ * Model Patient
  * 
  */
-export type patient = Prisma.patientModel
+export type Patient = Prisma.PatientModel
 /**
  * Model PatientHealthData
  * 
  */
 export type PatientHealthData = Prisma.PatientHealthDataModel
+/**
+ * Model Prescription
+ * 
+ */
+export type Prescription = Prisma.PrescriptionModel
 /**
  * Model Review
  * 

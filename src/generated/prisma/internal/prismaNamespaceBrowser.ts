@@ -62,8 +62,9 @@ export const ModelName = {
   Doctor: 'Doctor',
   DoctorSchedules: 'DoctorSchedules',
   MedicalReport: 'MedicalReport',
-  patient: 'patient',
+  Patient: 'Patient',
   PatientHealthData: 'PatientHealthData',
+  Prescription: 'Prescription',
   Review: 'Review',
   Schedule: 'Schedule',
   SuperAdmin: 'SuperAdmin'
@@ -295,6 +296,20 @@ export const PatientHealthDataScalarFieldEnum = {
 } as const
 
 export type PatientHealthDataScalarFieldEnum = (typeof PatientHealthDataScalarFieldEnum)[keyof typeof PatientHealthDataScalarFieldEnum]
+
+
+export const PrescriptionScalarFieldEnum = {
+  id: 'id',
+  followUpDate: 'followUpDate',
+  instructions: 'instructions',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  appointmentId: 'appointmentId',
+  patientId: 'patientId',
+  doctorId: 'doctorId'
+} as const
+
+export type PrescriptionScalarFieldEnum = (typeof PrescriptionScalarFieldEnum)[keyof typeof PrescriptionScalarFieldEnum]
 
 
 export const ReviewScalarFieldEnum = {
