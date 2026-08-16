@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { sendResponse } from "../../shared/sendResponse";
 import status from "http-status";
 import { tokenUtils } from "../../utils/token";
+import AppError from "../../errorHelpers/AppError";
 
 /**
  * Controller to handle Patient registration.
@@ -82,8 +83,41 @@ const getMe = catchAsync(
     }
 );
 
+
+const getNewToken = catchAsync(
+    async (req:Request , res:Response) => {
+        const refreshToken = req.cookies.refreshToken;
+        const betterAuthSessionToken = req.cookies["better-auth-session"];
+
+
+        if(!refreshToken || !betterAuthSessionToken){
+            throw new AppError(status.BAD_REQUEST,"No refresh token found")
+        }
+        const result = await AuthService.getNewToken(refreshToken,betterAuthSessionToken);
+
+        const {accessToken , refreshToken : newRefreshToken  ,sessionToken} = result;
+
+        tokenUtils.storeTokenIntoCookie(res,accessToken);
+        tokenUtils.storeRefreshTokenIntoCookie(res,newRefreshToken);
+        tokenUtils.setBetterAuthSessionCookie(res,sessionToken);
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "New token generated successfully",
+            data: {
+                sessionToken,
+                accessToken,
+                refreshToken:newRefreshToken,
+            },
+        });
+    }
+
+)   
+
 export const AuthController = {
     registerPatient,
     loginUser,
     getMe,
+    getNewToken
 };
