@@ -29,6 +29,11 @@ router.get("/me",checkAuth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADM
  */
 router.post("/refresh-token", AuthController.getNewToken);
 
+/**
+ * Route: POST /change-password
+ * Description: Changes the user's password.
+ */
+router.post("/change-password", checkAuth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN), AuthController.changePassword);
 
 export const authRouters = router;
  
