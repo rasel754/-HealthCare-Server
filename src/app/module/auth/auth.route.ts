@@ -35,5 +35,11 @@ router.post("/refresh-token", AuthController.getNewToken);
  */
 router.post("/change-password", checkAuth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN), AuthController.changePassword);
 
+/**
+ * Route: POST /logout
+ * Description: Logs out the user.
+ */
+router.post("/logout", checkAuth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN), AuthController.logOutUser);
+
 export const authRouters = router;
  
