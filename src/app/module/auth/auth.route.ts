@@ -40,6 +40,7 @@ router.post("/change-password", checkAuth(Role.ADMIN, Role.DOCTOR, Role.PATIENT,
  * Description: Logs out the user.
  */
 router.post("/logout", checkAuth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN), AuthController.logOutUser);
+router.post("/verify-email", AuthController.verifyEmail)
 
 export const authRouters = router;
  
