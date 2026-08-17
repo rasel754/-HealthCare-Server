@@ -22,7 +22,11 @@ interface envConfig {
         SMPT_HOST: string,
         SMPT_PORT: string,
         SMPT_FROM: string,
-    }
+    },
+    GOOGLE_CLIENT_ID:string,
+    GOOGLE_CLIENT_SECRET:string,
+    GOOGLE_CALLBACE_URL:string,
+    FRONTEND_URL:string
 
 }
 
@@ -44,7 +48,11 @@ const loadEnvVariable = (): envConfig => {
         'EMAIL_SENDER_SMTP_PASS',
         'EMAIL_SENDER_SMTP_HOST',
         'EMAIL_SENDER_SMTP_PORT',
-        'EMAIL_SENDER_SMTP_FROM'
+        'EMAIL_SENDER_SMTP_FROM',
+        'GOOGLE_CLIENT_ID',
+        'GOOGLE_CLIENT_SECRET',
+        'GOOGLE_CALLBACE_URL',
+        'FRONTEND_URL'
 
     ];
 
@@ -72,7 +80,11 @@ const loadEnvVariable = (): envConfig => {
             SMPT_HOST: process.env.EMAIL_SENDER_SMTP_HOST as string,
             SMPT_PORT: process.env.EMAIL_SENDER_SMTP_PORT as string,
             SMPT_FROM: process.env.EMAIL_SENDER_SMTP_FROM as string,
-        }
+        },
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+        GOOGLE_CALLBACE_URL: process.env.GOOGLE_CALLBACE_URL as string,
+        FRONTEND_URL: process.env.FRONTEND_URL as string
     }
 }
 
