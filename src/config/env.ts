@@ -23,10 +23,16 @@ interface envConfig {
         SMPT_PORT: string,
         SMPT_FROM: string,
     },
-    GOOGLE_CLIENT_ID:string,
-    GOOGLE_CLIENT_SECRET:string,
-    GOOGLE_CALLBACE_URL:string,
-    FRONTEND_URL:string
+    GOOGLE_CLIENT_ID: string,
+    GOOGLE_CLIENT_SECRET: string,
+    GOOGLE_CALLBACE_URL: string,
+    FRONTEND_URL: string,
+    CLOUDINARY: {
+        CLOUDINARY_CLOUD_NAME: string,
+        CLOUDINARY_API_KEY: string,
+        CLOUDINARY_API_SECRET: string,
+    }
+
 
 }
 
@@ -52,7 +58,10 @@ const loadEnvVariable = (): envConfig => {
         'GOOGLE_CLIENT_ID',
         'GOOGLE_CLIENT_SECRET',
         'GOOGLE_CALLBACE_URL',
-        'FRONTEND_URL'
+        'FRONTEND_URL',
+        'CLOUDINARY_CLOUD_NAME',
+        'CLOUDINARY_API_KEY',
+        'CLOUDINARY_API_SECRET',
 
     ];
 
@@ -84,7 +93,12 @@ const loadEnvVariable = (): envConfig => {
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
         GOOGLE_CALLBACE_URL: process.env.GOOGLE_CALLBACE_URL as string,
-        FRONTEND_URL: process.env.FRONTEND_URL as string
+        FRONTEND_URL: process.env.FRONTEND_URL as string,
+        CLOUDINARY: {
+            CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
+            CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+            CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string,
+        }
     }
 }
 

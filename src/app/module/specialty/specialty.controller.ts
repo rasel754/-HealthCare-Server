@@ -9,9 +9,20 @@ import { sendResponse } from "../../shared/sendResponse";
  * @route POST /api/v1/specialties
  * @access Admin
  */
-const createSpecialty = catchAsync(
+const createSpecialty = catchAsync( 
     async (req: Request, res: Response) => {
-        const payload = req.body;
+        let iconPath: string | undefined;
+
+        if (req.file) {
+            iconPath = req.file.path;
+        } else if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            iconPath = req.files[0].path;
+        }
+
+        const payload = {
+            ...req.body,
+            icon: iconPath,
+        };
         const result = await SpecialtyService.createSpecialty(payload);
 
         sendResponse(res, {
@@ -69,7 +80,18 @@ const deleteSpecialty = catchAsync(
 const updateSpecialty = catchAsync(
     async (req: Request, res: Response) => {
         const { id } = req.params;
-        const payload = req.body;
+        let iconPath: string | undefined;
+
+        if (req.file) {
+            iconPath = req.file.path;
+        } else if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            iconPath = req.files[0].path;
+        }
+
+        const payload = {
+            ...req.body,
+            ...(iconPath ? { icon: iconPath } : {}),
+        };
         const result = await SpecialtyService.updateSpecialty(id as string, payload);
         sendResponse(res, {
             httpStatusCode: 200,
@@ -85,4 +107,4 @@ export const SpecialtyController = {
     getAllSpecialty,
     deleteSpecialty,
     updateSpecialty,
-};
+};
