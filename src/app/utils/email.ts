@@ -9,7 +9,7 @@ import ejs from "ejs";
 
 const transporter = nodemailer.createTransport({
     host: envVars.EMAIL_SENDER.SMPT_HOST,
-    secure:true,
+    secure: Number(envVars.EMAIL_SENDER.SMPT_PORT) === 465,
     auth: {
         user: envVars.EMAIL_SENDER.SMPT_USER,
         pass: envVars.EMAIL_SENDER.SMPT_PASS,

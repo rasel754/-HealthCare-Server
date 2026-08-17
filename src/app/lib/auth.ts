@@ -53,24 +53,29 @@ export const auth = betterAuth({
         bearer(),
         emailOTP({
             overrideDefaultEmailVerification:true,
-            async sendVerificationOTP({email,otp,type}){
-                if (type === "email-verification"){
-                    const user = await prisma.user.findUnique({
-                        where:{
-                            email
-                        }
-                    })
-                    if (user && !user.emailVerified) {
-                        await sendEmail({
-                            to:email,
-                            subject:"Email Verification",
-                            templateName:"verify-email",
-                            templateData:{
-                                name:user.name,
-                                otp,
-                                url:``
+            async sendVerificationOTP({ email, otp, type }) {
+                if (type === "email-verification") {
+                    try {
+                        const user = await prisma.user.findUnique({
+                            where: {
+                                email
                             }
-                        })
+                        });
+                        if (!user || !user.emailVerified) {
+                            await sendEmail({
+                                to: email,
+                                subject: "Email Verification",
+                                templateName: "otp",
+                                templateData: {
+                                    name: user?.name || "User",
+                                    otp,
+                                    url: ``
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Error in sendVerificationOTP:", error);
+                        throw error;
                     }
                 }
             },
