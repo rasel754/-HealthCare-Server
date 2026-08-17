@@ -9,6 +9,7 @@ import jwtUtils from "../../utils/jwt";
 import { envVars } from "../../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 import { IChangePasswordPayload, ILoginUserPayload, IRegisterPatientPayload } from "./auth.interface";
+import { email } from "zod";
 
 /**
  * Service to register a new Patient user.
@@ -317,7 +318,6 @@ const logOutUser = async (sessionToken: string) => {
 
     return result;
 };
-
 const verifyEmail = async (email : string, otp : string) => {
 
     const result = await auth.api.verifyEmailOTP({
@@ -340,6 +340,78 @@ const verifyEmail = async (email : string, otp : string) => {
 }
 
 
+//forget password implimentation 
+const forgetPassword = async(email:string) =>{
+    const isUserExists= await prisma.user.findUnique({
+        where:{
+            email
+        }
+    })
+
+    if(!isUserExists){
+        throw new AppError(status.NOT_FOUND,"User Not Found");
+    }
+    if(!isUserExists.emailVerified){
+        throw new AppError(status.BAD_REQUEST,"Your Email Is Not Verified , Please Verify Your Email First");
+    }
+
+    if(isUserExists.status === UserStatus.BLOCKED){
+        throw new AppError(status.BAD_REQUEST,"Your Account Is Blocked , Please Contact To The Admin");
+    }
+
+    if(isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED){
+        throw new AppError(status.BAD_REQUEST,"Your Account Is Deleted , Please Contact To The Admin");
+    }
+
+    await auth.api.requestPasswordResetEmailOTP({
+        body : {
+            email
+        }
+    })
+
+    return {
+        message : "Password Reset OTP Sent Successfully"
+    }
+}
+
+
+//reset password 
+const resetPassword = async(email:string , otp:string , newPassword:string) =>{
+    const isUserExists= await prisma.user.findUnique({
+        where:{
+            email
+        }
+    })
+
+    if(!isUserExists){
+        throw new AppError(status.NOT_FOUND,"User Not Found");
+    }
+    if(!isUserExists.emailVerified){
+        throw new AppError(status.BAD_REQUEST,"Your Email Is Not Verified , Please Verify Your Email First");
+    }
+
+    if(isUserExists.status === UserStatus.BLOCKED){
+        throw new AppError(status.BAD_REQUEST,"Your Account Is Blocked , Please Contact To The Admin");
+    }
+
+    if(isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED){
+        throw new AppError(status.BAD_REQUEST,"Your Account Is Deleted , Please Contact To The Admin");
+    }
+
+    await auth.api.resetPasswordEmailOTP({
+        body : {
+            email,
+            otp,
+            password:newPassword,
+        }
+    })
+     await prisma.session.deleteMany({
+        where:{
+            userId : isUserExists.id,
+        }
+    })
+}
+
 
 export const AuthService = {
     registerPatient,
@@ -348,5 +420,7 @@ export const AuthService = {
     getNewToken,
     chnagePassword,
     logOutUser,
-    verifyEmail
+    verifyEmail,
+    forgetPassword,
+    resetPassword
 };
