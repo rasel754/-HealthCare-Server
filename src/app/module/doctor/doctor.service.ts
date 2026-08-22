@@ -2,6 +2,10 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { IUpdateDoctorPayload, IUpdateDoctorSpecialtyPayload } from "./doctor.interface";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { IQueryParams } from "../../interface/query.interface";
+import { Doctor, Prisma } from "../../../generated/prisma/client";
+import { doctorFilterableFields, doctorIncludeConfig, doctorSearchableFields } from "./doctor.constant";
 
 /**
  * Service to retrieve all doctors in the database.
@@ -15,20 +19,54 @@ import { IUpdateDoctorPayload, IUpdateDoctorSpecialtyPayload } from "./doctor.in
  *
  * @returns Array of doctor objects with nested user and specialties.
  */
-export const getAllDoctors = async () => {
-    return prisma.doctor.findMany({
-        where: {
+export const getAllDoctors = async (query:IQueryParams) => {
+    // return prisma.doctor.findMany({
+    //     where: {
+    //         isDeleted: false,
+    //     },
+    //     include: {
+    //         user: true,
+    //         specialties: {
+    //             include: {
+    //                 specialty: true,
+    //             },
+    //         },
+    //     },
+    // });
+
+    const queryBuilder = new QueryBuilder<Doctor, Prisma.DoctorWhereInput, Prisma.DoctorInclude>(
+        prisma.doctor,
+        query,
+        {
+            searchableFields: doctorSearchableFields,
+            filterableFields: doctorFilterableFields,
+        }
+    )
+
+    const result = await queryBuilder
+        .search()
+        .filter()
+        .where({
             isDeleted: false,
-        },
-        include: {
+        })
+        .include({
             user: true,
+            // specialties: true,
             specialties: {
-                include: {
-                    specialty: true,
-                },
+                include:{
+                    specialty: true
+                }
             },
-        },
-    });
+        })
+        .dynamicInclude(doctorIncludeConfig)
+        .paginate()
+        .sort()
+        .fields()
+        .execute();
+
+        console.log(result);
+    return result;
+
 };
 
 /**
@@ -247,4 +285,4 @@ export const DoctorService = {
     deleteDoctor: softDeleteDoctor,
     softDeleteDoctor,
 };
-
+
