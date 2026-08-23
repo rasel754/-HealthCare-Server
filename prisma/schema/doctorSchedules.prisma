@@ -15,4 +15,6 @@ model DoctorSchedules {
 
   @@unique([doctorId, scheduleId])
   @@map("doctor_schedules")
+  @@index([doctorId])
+  @@index([scheduleId])
 }

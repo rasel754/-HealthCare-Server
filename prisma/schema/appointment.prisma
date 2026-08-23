@@ -16,6 +16,7 @@ model Appointment {
 
   // One appointment can have one review, and medical report
   review          Review?
+  payment         Payment?
   medicalReport   MedicalReport?
   prescription    Prescription?
   doctorSchedules DoctorSchedules[]
