@@ -18,6 +18,12 @@ app.set("view engine", "ejs");
 app.set("views", path.resolve(process.cwd(), `src/app/templates`))
 
 
+app.post("/webhook",express.raw({type:"application/json"}),(req,res)=>{
+    console.log("webhook recived",req.body);
+    res.send(200).json({recieved:true})
+})
+
+
 app.use(cors({
     origin : [envVars.FRONTEND_URL, envVars.BETTER_AUTH_URL, "http://localhost:3000", "http://localhost:5000"],
     credentials : true,
