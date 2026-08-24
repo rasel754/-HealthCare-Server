@@ -8,8 +8,8 @@ import { envVars } from "../../config/env";
 
 
 export const auth = betterAuth({
-    baseURL:envVars.BETTER_AUTH_URL,
-    secret:envVars.BETTER_AUTH_SECRET,
+    baseURL: envVars.BETTER_AUTH_URL,
+    secret: envVars.BETTER_AUTH_SECRET,
     database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
@@ -83,7 +83,17 @@ export const auth = betterAuth({
                                 email
                             }
                         });
-                        if (!user || !user.emailVerified) {
+                        if (!user) {
+                            console.error(`User with email ${email} not found. Cannot send verification OTP.`);
+                            return;
+                        }
+
+                        if (user && user.role === Role.SUPER_ADMIN) {
+                            console.log(`User with email ${email} is a super admin. Skipping sending verification OTP.`);
+                            return;
+                        }
+                        
+                        if (user && !user.emailVerified) {
                             await sendEmail({
                                 to: email,
                                 subject: "Email Verification",
@@ -134,12 +144,12 @@ export const auth = betterAuth({
 
 
     },
-        redirectURLs:{
-        signIn : `${envVars.BETTER_AUTH_URL}/api/v1/auth/google/success`,
+    redirectURLs: {
+        signIn: `${envVars.BETTER_AUTH_URL}/api/v1/auth/google/success`,
     },
 
 
-      trustedOrigins: [process.env.BETTER_AUTH_URL || "http://localhost:5000", envVars.FRONTEND_URL],
+    trustedOrigins: [process.env.BETTER_AUTH_URL || "http://localhost:5000", envVars.FRONTEND_URL],
 
     advanced: {
         // disableCSRFCheck: true,
