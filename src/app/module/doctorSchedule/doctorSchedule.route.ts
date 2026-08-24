@@ -5,7 +5,7 @@ import { checkAuth } from "../../middlewares/checkAuth";
 
 
 const router = Router();
-
+ 
 router.post("/create-my-doctor-schedule",
     checkAuth(Role.DOCTOR),
      DoctorScheduleController.createMyDoctorSchedule);
