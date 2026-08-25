@@ -1962,6 +1962,8 @@ export type DoctorSchedulesScalarFieldEnum = (typeof DoctorSchedulesScalarFieldE
 export const MedicalReportScalarFieldEnum = {
   id: 'id',
   patientId: 'patientId',
+  reportName: 'reportName',
+  reportLink: 'reportLink',
   doctorId: 'doctorId',
   appointmentId: 'appointmentId',
   diagnosis: 'diagnosis',
@@ -2278,20 +2280,6 @@ export type EnumBloodGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$Prism
  * Reference to a field of type 'BloodGroup[]'
  */
 export type ListEnumBloodGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BloodGroup[]'>
-    
-
-
-/**
- * Reference to a field of type 'MaritalStatus'
- */
-export type EnumMaritalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MaritalStatus'>
-    
-
-
-/**
- * Reference to a field of type 'MaritalStatus[]'
- */
-export type ListEnumMaritalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MaritalStatus[]'>
     
 
 
