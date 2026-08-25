@@ -243,16 +243,11 @@ export type DoctorSchedulesScalarFieldEnum = (typeof DoctorSchedulesScalarFieldE
 
 export const MedicalReportScalarFieldEnum = {
   id: 'id',
-  patientId: 'patientId',
   reportName: 'reportName',
   reportLink: 'reportLink',
-  doctorId: 'doctorId',
-  appointmentId: 'appointmentId',
-  diagnosis: 'diagnosis',
-  treatment: 'treatment',
-  followUpDate: 'followUpDate',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  patientId: 'patientId'
 } as const
 
 export type MedicalReportScalarFieldEnum = (typeof MedicalReportScalarFieldEnum)[keyof typeof MedicalReportScalarFieldEnum]
