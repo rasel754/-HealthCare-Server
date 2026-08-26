@@ -12,23 +12,23 @@ import { PatientRoutes } from "../module/patient/patient.route";
 import { PrescriptionRoutes } from "../module/prescription/prescription.route";
 import { ReviewRoutes } from "../module/review/review.route";
 import { paymentRoutes } from "../module/payment/payment.route";
-import { StatsRoutes } from "../stats/stats.route";
+import { StatsRoutes } from "../module/stats/stats.route";
 
 const router = Router();
 
 router.use('/auth', authRouters);
-router.use('/specialty', SpecialtyRouter); 
+router.use('/specialty', SpecialtyRouter);
 router.use('/users', UserRoutes);
 router.use('/doctors', DoctorRoutes);
 router.use('/admins', AdminRoutes);
 router.use('/super-admins', SuperAdminRoutes);
 router.use('/schedules', scheduleRoutes);
-router.use('/doctor-schedules',DoctorScheduleRoutes)
-router.use('/appointments',AppointmentRoutes)
-router.use('/patient',PatientRoutes)
-router.use('/prescription',PrescriptionRoutes)
-router.use('/review',ReviewRoutes)
-router.use('/payment',paymentRoutes)
+router.use('/doctor-schedules', DoctorScheduleRoutes)
+router.use('/appointments', AppointmentRoutes)
+router.use('/patient', PatientRoutes)
+router.use('/prescription', PrescriptionRoutes)
+router.use('/review', ReviewRoutes)
+router.use('/payment', paymentRoutes)
 router.use('/stats', StatsRoutes)
 export const indexRouter = router;
 
