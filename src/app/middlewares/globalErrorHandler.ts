@@ -83,6 +83,24 @@ export const globalErrorHandler =async (err: any, req: Request, res: Response, n
             }
         ]
     }
+    else if (err && typeof err === 'object' && ('statusCode' in err || 'status' in err || err.name === 'APIError')) {
+        const rawStatus = (err as any).statusCode || (err as any).status;
+        if (typeof rawStatus === 'number') {
+            statusCode = rawStatus;
+        } else if (typeof rawStatus === 'string' && (status as any)[rawStatus]) {
+            statusCode = (status as any)[rawStatus] as number;
+        } else {
+            statusCode = status.UNAUTHORIZED;
+        }
+        message = (err as any).body?.message || (err as any).message || message;
+        stack = (err as any).stack;
+        errorSources = [
+            {
+                path: '',
+                message: message
+            }
+        ]
+    }
     else if (err instanceof Error) {
         statusCode = status.INTERNAL_SERVER_ERROR;
         message = err.message

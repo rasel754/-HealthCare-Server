@@ -7,7 +7,7 @@ import { generateInvoicePdf } from "./payment.utils";
 import { uploadFileToCloudinary } from "../../../config/cloudinary.config";
 
 
-const handlerStripeWebhookEvent = async (event : Stripe.Event) =>{
+const handleStripeWebhookEvent = async (event : Stripe.Event) =>{
 
     const existingPayment = await prisma.payment.findFirst({
         where:{
@@ -166,5 +166,5 @@ const handlerStripeWebhookEvent = async (event : Stripe.Event) =>{
 }
 
 export const PaymentService = {
-    handlerStripeWebhookEvent
+    handleStripeWebhookEvent
 }

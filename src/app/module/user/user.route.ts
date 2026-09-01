@@ -13,10 +13,11 @@ const router = Router();
  */
 router.post(
     "/create-doctor",
+    checkAuth(Role.SUPER_ADMIN, Role.ADMIN),
     validateRequest(createDoctorZodSchema),
     UserControllers.createDoctor
 );
-
+ 
 /**
  * Route: POST /create-admin
  * Access: SUPER_ADMIN only
@@ -40,4 +41,4 @@ router.post(
 );
 
 export const UserRoutes = router;
-
+

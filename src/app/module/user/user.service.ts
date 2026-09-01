@@ -39,7 +39,7 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
         specialties.push(speciality);
     }
 
-    // Step 2: Check if user already exists with the given email
+    // Step 2: Check if user or doctor already exists with the given email or registration number
     const userExist = await prisma.user.findUnique({
         where: {
             email: payload.doctor.email,
@@ -47,7 +47,17 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
     });
 
     if (userExist) {
-        throw new AppError(status.BAD_REQUEST, `User already exists ${payload.doctor.email}`);
+        throw new AppError(status.BAD_REQUEST, `User already exists with email: ${payload.doctor.email}`);
+    }
+
+    const doctorWithRegExist = await prisma.doctor.findUnique({
+        where: {
+            registrationNumber: payload.doctor.registrationNumber,
+        },
+    });
+
+    if (doctorWithRegExist) {
+        throw new AppError(status.BAD_REQUEST, `Doctor with registration number ${payload.doctor.registrationNumber} already exists`);
     }
 
     // Step 3: Register user account via Better-Auth engine
@@ -64,9 +74,14 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
     try {
         // Step 4: Execute database transaction to create Doctor profile and join specialty records
         const result = await prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: userData.user.id },
+                data: { emailVerified: true },
+            });
+
             // 4a. Create Doctor profile linked to created User ID
             const doctorData = await tx.doctor.create({
-                data: {
+                data: { 
                     userId: userData.user.id,
                     ...payload.doctor,
                 },
@@ -175,6 +190,11 @@ const createAdmin = async (payload: ICreateAdminPayload) => {
 
     try {
         const result = await prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: userData.user.id },
+                data: { emailVerified: true },
+            });
+
             const admin = await tx.admin.create({
                 data: {
                     userId: userData.user.id,
@@ -248,6 +268,11 @@ const createSuperAdmin = async (payload: ICreateSuperAdminPayload) => {
 
     try {
         const result = await prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: userData.user.id },
+                data: { emailVerified: true },
+            });
+
             const superAdmin = await tx.superAdmin.create({
                 data: {
                     userId: userData.user.id,
@@ -300,4 +325,4 @@ export const UserServices = {
     createAdmin,
     createSuperAdmin,
 };
-
+

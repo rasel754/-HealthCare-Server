@@ -103,31 +103,54 @@ const formatErrorMeta = (meta ?: Record<string, unknown>) : string =>{
 }
 
 export const handlePrismaClientKnownRequestError = (error: Prisma.PrismaClientKnownRequestError) : TErrorResponse => {
-    const statusCode = getStatusCodeFromPrismaError(error.code)
-    const metaInfo = formatErrorMeta(error.meta)
+    const statusCode = getStatusCodeFromPrismaError(error.code);
+    const metaInfo = formatErrorMeta(error.meta);
 
-    let cleanMessage = error.message;
+    let cleanMessage = error.message
+        .replace(/Invalid `.*?` invocation in\s*\S+/gi, "")
+        .replace(/Invalid `.*?` invocation:?\s*/gi, "");
 
-    // Remove the "Invalid `prisma.user.create()` invocation: " part from the message for better readability
-    cleanMessage = cleanMessage.replace(/Invalid `.*?` invocation:?\s*/i, "")
+    const lines = cleanMessage.split("\n").map(line => line.trim()).filter(Boolean);
+    
+    let mainMessage = lines.find(line => 
+        line.includes("Unique constraint") || 
+        line.includes("Foreign key") || 
+        line.includes("Record") || 
+        (!line.startsWith("D:") && !line.startsWith("C:") && line.length > 5)
+    ) || lines[0] || "An error occurred with the database operation.";
 
-    // split by new line and take the first line as the main message, rest can be added to error sources
+    if (error.code === "P2002") {
+        const targetFields = Array.isArray(error.meta?.target)
+            ? error.meta.target.join(", ")
+            : error.meta?.target
+            ? String(error.meta.target)
+            : "";
 
-    const lines = cleanMessage.split("\n").filter(line => line.trim());
-    const mainMessage = lines[0] || "An error occurred with the database operation."
+        // Extract constraint or field details if present in driver adapter error
+        const driverAdapterCause = (error.meta?.driverAdapterError as any)?.cause;
+        const constraintName = driverAdapterCause?.constraint?.index || "";
+
+        if (targetFields) {
+            mainMessage = `Unique constraint failed on field(s): ${targetFields}`;
+        } else if (constraintName) {
+            mainMessage = `Unique constraint failed on constraint (${constraintName})`;
+        } else {
+            mainMessage = "A record with this unique value already exists.";
+        }
+    }
 
     const errorSources : TErrorSources[] = [
         {
             path: error.code,
-            message : metaInfo ? `${mainMessage} | ${metaInfo}` : mainMessage
+            message: metaInfo ? `${mainMessage} | ${metaInfo}` : mainMessage
         }
-    ] ;
+    ];
 
-    if(error.meta?.cause){
+    if (error.meta?.cause) {
         errorSources.push({
             path: "cause",
             message: String(error.meta.cause)
-        })
+        });
     }
 
     return {
@@ -135,7 +158,7 @@ export const handlePrismaClientKnownRequestError = (error: Prisma.PrismaClientKn
         statusCode,
         message: `Prisma Client Known Request Error: ${mainMessage}`,
         errorSources,
-    }
+    };
 }
 
 export const handlePrismaClientUnknownError = (error: Prisma.PrismaClientUnknownRequestError) : TErrorResponse => {

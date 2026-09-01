@@ -166,20 +166,20 @@ const getMe = async (user: IRequestUser) => {
                     appointments: true,
                     medicalReports: true,
                     reviews: true,
-                     prescriptions : true,
-                    patientHealthData:true,
-                    
+                    prescriptions: true,
+                    patientHealthData: true,
+
                 }
             },
             doctor: {
                 include: {
                     specialties: true,
-                    appointments:true,
-                    reviews:true,
-                    
+                    appointments: true,
+                    reviews: true,
+
                 }
             },
-            admin:true
+            admin: true
         }
     })
 
@@ -196,26 +196,26 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
     const isSessionTokenExists = await prisma.session.findUnique({
         where: {
             token: sessionToken,
-            
+
         },
-        include :{
-            user : true,
+        include: {
+            user: true,
         }
     })
 
-    if(!isSessionTokenExists){
-        throw new AppError(status.NOT_FOUND , "invalid session token")
+    if (!isSessionTokenExists) {
+        throw new AppError(status.NOT_FOUND, "invalid session token")
     }
 
 
-    const verifiedRefreshToken = jwtUtils.verifyToken(refreshToken , envVars.REFRESH_TOKEN_SECRET)
+    const verifiedRefreshToken = jwtUtils.verifyToken(refreshToken, envVars.REFRESH_TOKEN_SECRET)
 
-    if(!verifiedRefreshToken.success){
-        throw new AppError(status.UNAUTHORIZED , "Invalid Refresh Token")
+    if (!verifiedRefreshToken.success) {
+        throw new AppError(status.UNAUTHORIZED, "Invalid Refresh Token")
     }
-   const data = verifiedRefreshToken.data as JwtPayload;
+    const data = verifiedRefreshToken.data as JwtPayload;
 
-   const newAccessToken = tokenUtils.getAccessToken({
+    const newAccessToken = tokenUtils.getAccessToken({
         userId: data.userId,
         role: data.role,
         name: data.name,
@@ -234,21 +234,21 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
         emailVerified: data.emailVerified,
     });
 
-    const {token} = await prisma.session.update({
-        where:{
-            token : sessionToken
+    const { token } = await prisma.session.update({
+        where: {
+            token: sessionToken
         },
-        data : {
-            token:sessionToken,
-            expiresAt: new Date(Date.now() + 60*60*60*24*1000),
-            updatedAt:new Date()
+        data: {
+            token: sessionToken,
+            expiresAt: new Date(Date.now() + 60 * 60 * 60 * 24 * 1000),
+            updatedAt: new Date()
         }
     })
 
     return {
-        accessToken : newAccessToken,
-        refreshToken : newRefreshToken,
-        sessionToken:token
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        sessionToken: token
     }
 }
 
@@ -279,7 +279,7 @@ const chnagePassword = async (payload: IChangePasswordPayload, sessionToken: str
         }),
     });
 
-    if(session.user.needPasswordChange){
+    if (session.user.needPasswordChange) {
         await prisma.user.update({
             where: {
                 id: session.user.id,
@@ -290,7 +290,7 @@ const chnagePassword = async (payload: IChangePasswordPayload, sessionToken: str
         })
     }
 
-     const newAccessToken = tokenUtils.getAccessToken({
+    const newAccessToken = tokenUtils.getAccessToken({
         userId: session.user.id,
         role: session.user.role,
         name: session.user.name,
@@ -311,8 +311,8 @@ const chnagePassword = async (payload: IChangePasswordPayload, sessionToken: str
 
     return {
         ...result,
-        accessToken : newAccessToken,
-        refreshToken : newRefreshToken
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
     };
 };
 
@@ -328,21 +328,21 @@ const logOutUser = async (sessionToken: string) => {
 
     return result;
 };
-const verifyEmail = async (email : string, otp : string) => {
+const verifyEmail = async (email: string, otp: string) => {
 
     const result = await auth.api.verifyEmailOTP({
-        body:{
+        body: {
             email,
             otp,
         }
     })
 
-    if(result.status && !result.user.emailVerified){
+    if (result.status && !result.user.emailVerified) {
         await prisma.user.update({
-            where : {
+            where: {
                 email,
             },
-            data : {
+            data: {
                 emailVerified: true,
             }
         })
@@ -351,72 +351,72 @@ const verifyEmail = async (email : string, otp : string) => {
 
 
 //forget password implimentation 
-const forgetPassword = async(email:string) =>{
-    const isUserExists= await prisma.user.findUnique({
-        where:{
+const forgetPassword = async (email: string) => {
+    const isUserExists = await prisma.user.findUnique({
+        where: {
             email
         }
     })
 
-    if(!isUserExists){
-        throw new AppError(status.NOT_FOUND,"User Not Found");
+    if (!isUserExists) {
+        throw new AppError(status.NOT_FOUND, "User Not Found");
     }
-    if(!isUserExists.emailVerified){
-        throw new AppError(status.BAD_REQUEST,"Your Email Is Not Verified , Please Verify Your Email First");
-    }
-
-    if(isUserExists.status === UserStatus.BLOCKED){
-        throw new AppError(status.BAD_REQUEST,"Your Account Is Blocked , Please Contact To The Admin");
+    if (!isUserExists.emailVerified) {
+        throw new AppError(status.BAD_REQUEST, "Your Email Is Not Verified , Please Verify Your Email First");
     }
 
-    if(isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED){
-        throw new AppError(status.BAD_REQUEST,"Your Account Is Deleted , Please Contact To The Admin");
+    if (isUserExists.status === UserStatus.BLOCKED) {
+        throw new AppError(status.BAD_REQUEST, "Your Account Is Blocked , Please Contact To The Admin");
+    }
+
+    if (isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED) {
+        throw new AppError(status.BAD_REQUEST, "Your Account Is Deleted , Please Contact To The Admin");
     }
 
     await auth.api.requestPasswordResetEmailOTP({
-        body : {
+        body: {
             email
         }
     })
 
     return {
-        message : "Password Reset OTP Sent Successfully"
+        message: "Password Reset OTP Sent Successfully"
     }
 }
 
 
 //reset password 
-const resetPassword = async(email:string , otp:string , newPassword:string) =>{
-    const isUserExists= await prisma.user.findUnique({
-        where:{
+const resetPassword = async (email: string, otp: string, newPassword: string) => {
+    const isUserExists = await prisma.user.findUnique({
+        where: {
             email
         }
     })
 
-    if(!isUserExists){
-        throw new AppError(status.NOT_FOUND,"User Not Found");
+    if (!isUserExists) {
+        throw new AppError(status.NOT_FOUND, "User Not Found");
     }
-    if(!isUserExists.emailVerified){
-        throw new AppError(status.BAD_REQUEST,"Your Email Is Not Verified , Please Verify Your Email First");
-    }
-
-    if(isUserExists.status === UserStatus.BLOCKED){
-        throw new AppError(status.BAD_REQUEST,"Your Account Is Blocked , Please Contact To The Admin");
+    if (!isUserExists.emailVerified) {
+        throw new AppError(status.BAD_REQUEST, "Your Email Is Not Verified , Please Verify Your Email First");
     }
 
-    if(isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED){
-        throw new AppError(status.BAD_REQUEST,"Your Account Is Deleted , Please Contact To The Admin");
+    if (isUserExists.status === UserStatus.BLOCKED) {
+        throw new AppError(status.BAD_REQUEST, "Your Account Is Blocked , Please Contact To The Admin");
+    }
+
+    if (isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED) {
+        throw new AppError(status.BAD_REQUEST, "Your Account Is Deleted , Please Contact To The Admin");
     }
 
     await auth.api.resetPasswordEmailOTP({
-        body : {
+        body: {
             email,
             otp,
-            password:newPassword,
+            password: newPassword,
         }
     })
 
-        if (isUserExists.needPasswordChange) {
+    if (isUserExists.needPasswordChange) {
         await prisma.user.update({
             where: {
                 id: isUserExists.id,
@@ -428,28 +428,28 @@ const resetPassword = async(email:string , otp:string , newPassword:string) =>{
     }
 
 
-     await prisma.session.deleteMany({
-        where:{
-            userId : isUserExists.id,
+    await prisma.session.deleteMany({
+        where: {
+            userId: isUserExists.id,
         }
     })
 }
 
-const googleLoginSuccess = async (session : Record<string, any>) =>{
+const googleLoginSuccess = async (session: Record<string, any>) => {
     const isPatientExists = await prisma.patient.findUnique({
-        where : {
-            userId : session.user.id,
+        where: {
+            userId: session.user.id,
         }
     })
 
-    if(!isPatientExists){
+    if (!isPatientExists) {
         await prisma.patient.create({
-            data : {
-                userId : session.user.id,
-                name : session.user.name,
-                email : session.user.email,
+            data: {
+                userId: session.user.id,
+                name: session.user.name,
+                email: session.user.email,
             }
-        
+
         })
     }
 
