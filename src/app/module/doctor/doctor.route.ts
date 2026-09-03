@@ -9,21 +9,19 @@ const router = Router();
 
 /**
  * Route: GET /
- * Access: ADMIN, SUPER_ADMIN, DOCTOR
+ * Access: Public
  */
 router.get(
     "/",
-    checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.DOCTOR),
     DoctorController.getAllDoctors
 );
 
 /**
  * Route: GET /:id
- * Access: ADMIN, SUPER_ADMIN, DOCTOR
+ * Access: Public
  */
 router.get(
     "/:id",
-    checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.DOCTOR),
     DoctorController.getDoctorById
 );
 

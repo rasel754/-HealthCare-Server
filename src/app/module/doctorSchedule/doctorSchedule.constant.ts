@@ -17,7 +17,7 @@ export const doctorScheduleFilterableFields = [
     'schedule.endDateTime',
 ]
 
-export const doctorScheduleIncludeConfig : Partial<Record<keyof Prisma.DoctorSchedulesInclude, Prisma.DoctorSchedulesInclude[keyof Prisma.DoctorSchedulesInclude]>> ={
+export const doctorScheduleIncludeConfig : Prisma.DoctorSchedulesInclude ={
     doctor: {
         include: {
             user: true,

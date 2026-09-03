@@ -48,6 +48,28 @@ export const handleStripeWebhookEvent = catchAsync(async (req:Request, res:Respo
 })
 
 
-export const PaymentControler ={
-    handleStripeWebhookEvent
-}
+export const getAllPayments = catchAsync(async (req: Request, res: Response) => {
+    const result = await PaymentService.getAllPayments();
+    sendResponse(res, {
+        httpStatusCode: httpStatus.OK,
+        success: true,
+        message: "Payments retrieved successfully",
+        data: result
+    });
+});
+
+export const confirmPayment = catchAsync(async (req: Request, res: Response) => {
+    const result = await PaymentService.confirmPayment(req.body);
+    sendResponse(res, {
+        httpStatusCode: httpStatus.OK,
+        success: true,
+        message: "Payment confirmed successfully",
+        data: result
+    });
+});
+
+export const PaymentControler = {
+    handleStripeWebhookEvent,
+    getAllPayments,
+    confirmPayment
+}

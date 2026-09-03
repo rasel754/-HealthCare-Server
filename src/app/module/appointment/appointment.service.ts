@@ -95,11 +95,12 @@ const bookAppointment = async (payload : IBookAppointmentPayload, user : IReques
                 paymentId : paymentData.id,
             },
 
-            success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success`,
+            success_url: `${envVars.FRONTEND_URL}/dashboard/my-appointments?payment=success&status=PAID&appointment_id=${appointmentData.id}&payment_id=${paymentData.id}&session_id={CHECKOUT_SESSION_ID}`,
 
-            // cancel_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-failed`,
-            cancel_url: `${envVars.FRONTEND_URL}/dashboard/appointments`,
+            cancel_url: `${envVars.FRONTEND_URL}/dashboard/my-appointments?error=payment_cancelled`,
         })
+
+
 
         return {
             appointmentData,
@@ -382,11 +383,11 @@ const initiatePayment = async (appointmentId: string, user : IRequestUser) => {
             paymentId: appointmentData.payment.id,
         },
 
-        success_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-success?appointment_id=${appointmentData.id}&payment_id=${appointmentData.payment.id}`,
+        success_url: `${envVars.FRONTEND_URL}/dashboard/my-appointments?payment=success&status=PAID&appointment_id=${appointmentData.id}&payment_id=${appointmentData.payment.id}&session_id={CHECKOUT_SESSION_ID}`,
 
-        // cancel_url: `${envVars.FRONTEND_URL}/dashboard/payment/payment-failed`,
-        cancel_url: `${envVars.FRONTEND_URL}/dashboard/appointments?error=payment_cancelled`,
+        cancel_url: `${envVars.FRONTEND_URL}/dashboard/my-appointments?error=payment_cancelled`,
     })
+
 
     return {
         paymentUrl: session.url,

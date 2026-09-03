@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Stripe from "stripe";
+import { stripe } from "../../../config/stripe.config";
 import { PaymentStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import { sendEmail } from "../../utils/email";
 import { generateInvoicePdf } from "./payment.utils";
 import { uploadFileToCloudinary } from "../../../config/cloudinary.config";
+
 
 
 const handleStripeWebhookEvent = async (event : Stripe.Event) =>{
@@ -165,6 +167,80 @@ const handleStripeWebhookEvent = async (event : Stripe.Event) =>{
     return {message : `Webhook Event ${event.id} processed successfully`}
 }
 
-export const PaymentService = {
-    handleStripeWebhookEvent
+const getAllPayments = async () => {
+    const payments = await prisma.payment.findMany({
+        include: {
+            appointment: {
+                include: {
+                    patient: true,
+                    doctor: true,
+                    schedule: true,
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+    return payments;
 }
+
+const confirmPayment = async (payload: { appointmentId?: string; paymentId?: string; transactionId?: string; sessionId?: string; paymentGatewayData?: any }) => {
+    let { appointmentId, paymentId, transactionId, sessionId, paymentGatewayData } = payload;
+
+    if (sessionId && (!appointmentId || !paymentId)) {
+        try {
+            const session = await stripe.checkout.sessions.retrieve(sessionId);
+            if (session.metadata?.appointmentId) appointmentId = session.metadata.appointmentId;
+            if (session.metadata?.paymentId) paymentId = session.metadata.paymentId;
+            if (!paymentGatewayData) paymentGatewayData = session;
+        } catch (err) {
+            console.error("Error retrieving stripe session in confirmPayment:", err);
+        }
+    }
+
+    const payment = await prisma.payment.findFirst({
+        where: {
+            OR: [
+                ...(paymentId ? [{ id: paymentId }] : []),
+                ...(appointmentId ? [{ appointmentId }] : []),
+                ...(transactionId ? [{ transactionId }] : []),
+            ]
+        },
+        include: {
+            appointment: true
+        }
+    });
+
+    if (!payment) {
+        throw new Error("Payment record not found");
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+        const updatedPayment = await tx.payment.update({
+            where: { id: payment.id },
+            data: {
+                status: PaymentStatus.PAID,
+                paymentGatewayData: paymentGatewayData || { paymentMethod: "STRIPE", settledAt: new Date().toISOString() },
+            }
+        });
+
+        const updatedAppointment = await tx.appointment.update({
+            where: { id: payment.appointmentId },
+            data: {
+                paymentStatus: PaymentStatus.PAID
+            }
+        });
+
+        return { updatedPayment, updatedAppointment };
+    });
+
+    return result;
+}
+
+
+export const PaymentService = {
+    handleStripeWebhookEvent,
+    getAllPayments,
+    confirmPayment
+}

@@ -85,7 +85,7 @@ const getAllSchedules = async (query : IQueryParams) => {
     .search()
     .filter()
     .paginate()
-    .dynamicInclude(scheduleIncludeConfig)
+    .dynamicInclude(scheduleIncludeConfig, ['doctorSchedules', 'appointments'])
     .sort()
     .fields()
     .execute();
@@ -97,7 +97,8 @@ const getScheduleById = async (id: string) => {
     const schedule = await prisma.schedule.findUnique({
         where: {
             id: id
-        }
+        },
+        include: scheduleIncludeConfig
     });
     return schedule;
 }

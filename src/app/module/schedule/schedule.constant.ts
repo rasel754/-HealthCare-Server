@@ -13,7 +13,7 @@ export const scheduleSearchableFields = [
     'endDateTime',
 ]
 
-export const scheduleIncludeConfig : Partial<Record<keyof Prisma.ScheduleInclude, Prisma.ScheduleInclude[keyof Prisma.ScheduleInclude]>> ={
+export const scheduleIncludeConfig : Prisma.ScheduleInclude ={
     appointments: {
         include: {
             doctor: true,
@@ -23,5 +23,9 @@ export const scheduleIncludeConfig : Partial<Record<keyof Prisma.ScheduleInclude
             review: true,
         }
     },
-    doctorSchedules: true
+    doctorSchedules: {
+        include: {
+            doctor: true
+        }
+    }
 }

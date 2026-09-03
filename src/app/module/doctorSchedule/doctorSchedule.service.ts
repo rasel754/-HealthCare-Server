@@ -82,7 +82,7 @@ const getAllDoctorSchedules = async (query: IQueryParams) => {
     .search()
     .filter()
     .paginate()
-    .dynamicInclude(doctorScheduleIncludeConfig)
+    .dynamicInclude(doctorScheduleIncludeConfig, ['schedule', 'doctor'])
     .sort()
     .execute();
 
