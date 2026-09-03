@@ -49,24 +49,75 @@ const getSuperAdminById = async (id: string) => {
 };
 
 const updateSuperAdmin = async (id: string, payload: IUpdateSuperAdminPayload) => {
-    const existingSuperAdmin = await prisma.superAdmin.findUnique({
-        where: { id, isDeleted: false },
+    const existingSuperAdmin = await prisma.superAdmin.findFirst({
+        where: {
+            OR: [
+                { id },
+                { userId: id },
+            ],
+            isDeleted: false,
+        },
     });
 
     if (!existingSuperAdmin) {
+        const existingAdmin = await prisma.admin.findFirst({
+            where: {
+                OR: [
+                    { id },
+                    { userId: id },
+                ],
+                isDeleted: false,
+            },
+        });
+
+        if (existingAdmin) {
+            return prisma.$transaction(async (tx) => {
+                if (payload.name || payload.profilePhoto) {
+                    await tx.user.update({
+                        where: { id: existingAdmin.userId },
+                        data: {
+                            ...(payload.name ? { name: payload.name } : {}),
+                            ...(payload.profilePhoto ? { image: payload.profilePhoto } : {}),
+                        },
+                    });
+                }
+
+                const updatedAdmin = await tx.admin.update({
+                    where: { id: existingAdmin.id },
+                    data: payload,
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true,
+                                status: true,
+                            },
+                        },
+                    },
+                });
+
+                return updatedAdmin;
+            });
+        }
+
         throw new AppError(status.NOT_FOUND, "Super Admin not found");
     }
 
     return prisma.$transaction(async (tx) => {
-        if (payload.name) {
+        if (payload.name || payload.profilePhoto) {
             await tx.user.update({
                 where: { id: existingSuperAdmin.userId },
-                data: { name: payload.name },
+                data: {
+                    ...(payload.name ? { name: payload.name } : {}),
+                    ...(payload.profilePhoto ? { image: payload.profilePhoto } : {}),
+                },
             });
         }
 
         const updatedSuperAdmin = await tx.superAdmin.update({
-            where: { id },
+            where: { id: existingSuperAdmin.id },
             data: payload,
             include: {
                 user: {

@@ -52,8 +52,14 @@ const getAdminById = async (id: string) => {
 };
 
 const updateAdmin = async (id: string, payload: IUpdateAdminPayload) => {
-    const existingAdmin = await prisma.admin.findUnique({
-        where: { id, isDeleted: false },
+    const existingAdmin = await prisma.admin.findFirst({
+        where: {
+            OR: [
+                { id },
+                { userId: id },
+            ],
+            isDeleted: false,
+        },
     });
 
     if (!existingAdmin) {
@@ -61,15 +67,18 @@ const updateAdmin = async (id: string, payload: IUpdateAdminPayload) => {
     }
 
     return prisma.$transaction(async (tx) => {
-        if (payload.name) {
+        if (payload.name || payload.profilePhoto) {
             await tx.user.update({
                 where: { id: existingAdmin.userId },
-                data: { name: payload.name },
+                data: {
+                    ...(payload.name ? { name: payload.name } : {}),
+                    ...(payload.profilePhoto ? { image: payload.profilePhoto } : {}),
+                },
             });
         }
 
         const updatedAdmin = await tx.admin.update({
-            where: { id },
+            where: { id: existingAdmin.id },
             data: payload,
             include: {
                 user: {

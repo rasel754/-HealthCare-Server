@@ -25,7 +25,8 @@ router.use('/super-admins', SuperAdminRoutes);
 router.use('/schedules', scheduleRoutes);
 router.use('/doctor-schedules', DoctorScheduleRoutes)
 router.use('/appointments', AppointmentRoutes)
-router.use('/patient', PatientRoutes)
+router.use('/patient', PatientRoutes);
+router.use('/patients', PatientRoutes);
 router.use('/prescription', PrescriptionRoutes)
 router.use('/review', ReviewRoutes)
 router.use('/payment', paymentRoutes)

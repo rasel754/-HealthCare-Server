@@ -192,15 +192,18 @@ const updateDoctor = async (id: string, payload: any) => {
             }
         }
 
-        // Synchronize user's name if doctor's name changes
-        if (doctorData.name) {
+        // Synchronize user's name and image if doctor's name or profilePhoto changes
+        if (doctorData.name || doctorData.profilePhoto) {
             const currentDoctor = await tx.doctor.findUniqueOrThrow({
                 where: { id },
                 select: { userId: true },
             });
             await tx.user.update({
                 where: { id: currentDoctor.userId },
-                data: { name: doctorData.name },
+                data: {
+                    ...(doctorData.name ? { name: doctorData.name } : {}),
+                    ...(doctorData.profilePhoto ? { image: doctorData.profilePhoto } : {}),
+                },
             });
         }
 

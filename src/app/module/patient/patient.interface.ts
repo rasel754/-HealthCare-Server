@@ -8,22 +8,22 @@ export interface IUpdatePatientInfoPayload{
     address ?: string;
 }
 
-export interface IUpdatePatientHealthDataPayload{
-    gender: Gender;
-    dateOfBirth: Date;
-    bloodGroup: BloodGroup;
-    hasAllergies: boolean;
-    hasDiabetes: boolean;
-    height: string;
-    weight: string;
-    smokingStatus: boolean;
-    dietaryPreference?: string;
-    pregnancyStatus: boolean;
+export interface IUpdatePatientHealthDataPayload {
+    gender?: Gender;
+    dateOfBirth?: Date | string;
+    bloodGroup?: BloodGroup;
+    hasAllergies?: boolean;
+    hasDiabetes?: boolean;
+    height?: string;
+    weight?: string;
+    smokingStatus?: boolean;
+    dietaryPreferences?: string;
+    pregnancyStatus?: boolean;
     mentalHealthHistory?: string;
     immunizationStatus?: string;
-    hasPastSurgeries: boolean;
-    recentAnxiety: boolean;
-    recentDepression: boolean;
+    hasPastSurgeries?: boolean;
+    recentAnxiety?: boolean;
+    recentDepression?: boolean;
     maritalStatus?: string;
 }
 

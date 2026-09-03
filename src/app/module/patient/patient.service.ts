@@ -1,49 +1,211 @@
+import status from "http-status";
+import AppError from "../../errorHelpers/AppError";
 import { deleteFileFromCloudinary } from "../../../config/cloudinary.config";
 import { IRequestUser } from "../../interface/requestUser.interface";
-
 import { prisma } from "../../lib/prisma";
 import { IUpdatePatientHealthDataPayload, IUpdatePatientProfilePayload } from "./patient.interface";
 import { convertToDateTime } from "./patient.utils";
+import { IQueryParams } from "../../interface/query.interface";
+import { Patient, Prisma, UserStatus } from "../../../generated/prisma/client";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { patientFilterableFields, patientIncludeConfig, patientSearchableFields } from "./patient.constant";
 
-const updateMyProfile = async (user : IRequestUser , payload : IUpdatePatientProfilePayload) => {
-    // throw new Error("This is an intentional error to test Sentry integration in the backend.");
-    const patientData = await prisma.patient.findUniqueOrThrow({
-        where : {
-            email : user.email
-        },
-        include:{
-            patientHealthData : true,
-            medicalReports : true,
+/**
+ * Service to retrieve all registered patients with filtering, searching, and pagination.
+ */
+const getAllPatients = async (query: IQueryParams) => {
+    const queryBuilder = new QueryBuilder<Patient, Prisma.PatientWhereInput, Prisma.PatientInclude>(
+        prisma.patient,
+        query,
+        {
+            searchableFields: patientSearchableFields,
+            filterableFields: patientFilterableFields,
         }
+    );
+
+    const result = await queryBuilder
+        .search()
+        .filter()
+        .where({
+            isDeleted: false,
+        })
+        .include({
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    status: true,
+                    image: true,
+                },
+            },
+            patientHealthData: true,
+            medicalReports: true,
+        })
+        .dynamicInclude(patientIncludeConfig)
+        .paginate()
+        .sort()
+        .fields()
+        .execute();
+
+    return result;
+};
+
+/**
+ * Service to fetch a single patient by ID with full health profile and related associations.
+ */
+const getPatientById = async (id: string) => {
+    const result = await prisma.patient.findUnique({
+        where: {
+            id,
+            isDeleted: false,
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    status: true,
+                    image: true,
+                },
+            },
+            patientHealthData: true,
+            medicalReports: true,
+            appointments: {
+                include: {
+                    doctor: true,
+                    schedule: true,
+                },
+            },
+            prescriptions: true,
+            reviews: true,
+        },
+    });
+
+    if (!result) {
+        throw new AppError(status.NOT_FOUND, "Patient not found");
+    }
+
+    return result;
+};
+
+/**
+ * Service to update patient details by ID (Admin / Super Admin / Doctor).
+ */
+const updatePatient = async (id: string, payload: Partial<Patient>) => {
+    const isPatientExists = await prisma.patient.findUnique({
+        where: { id, isDeleted: false },
+    });
+
+    if (!isPatientExists) {
+        throw new AppError(status.NOT_FOUND, "Patient not found");
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        if (payload.name || payload.profilePhoto) {
+            await tx.user.update({
+                where: { id: isPatientExists.userId },
+                data: {
+                    ...(payload.name ? { name: payload.name } : {}),
+                    ...(payload.profilePhoto ? { image: payload.profilePhoto } : {}),
+                },
+            });
+        }
+
+        const updatedPatient = await tx.patient.update({
+            where: { id },
+            data: payload,
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                        status: true,
+                        image: true,
+                    },
+                },
+                patientHealthData: true,
+                medicalReports: true,
+            },
+        });
+
+        return updatedPatient;
+    });
+};
+
+/**
+ * Service to soft delete a patient record and update user account status.
+ */
+const softDeletePatient = async (id: string) => {
+    const isPatientExists = await prisma.patient.findUnique({
+        where: { id, isDeleted: false },
+    });
+
+    if (!isPatientExists) {
+        throw new AppError(status.NOT_FOUND, "Patient not found");
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+            where: { id: isPatientExists.userId },
+            data: {
+                status: UserStatus.DELETED,
+            },
+        });
+
+        const deletedPatient = await tx.patient.update({
+            where: { id },
+            data: {
+                isDeleted: true,
+                deletedAt: new Date(),
+            },
+        });
+
+        return deletedPatient;
+    });
+};
+
+const updateMyProfile = async (user: IRequestUser, payload: IUpdatePatientProfilePayload) => {
+    const patientData = await prisma.patient.findUniqueOrThrow({
+        where: {
+            email: user.email,
+        },
+        include: {
+            patientHealthData: true,
+            medicalReports: true,
+        },
     });
 
     await prisma.$transaction(async (tx) => {
-        if(payload.patientInfo){
+        if (payload.patientInfo) {
             await tx.patient.update({
-                where : {
-                    id : patientData.id
+                where: {
+                    id: patientData.id,
                 },
-                data : {
-                    ...payload.patientInfo
-                }
+                data: {
+                    ...payload.patientInfo,
+                },
             });
 
-            if(payload.patientInfo.name || payload.patientInfo.profilePhoto){
+            if (payload.patientInfo.name || payload.patientInfo.profilePhoto) {
                 const userData = {
-                    name : payload.patientInfo.name ? payload.patientInfo.name : patientData.name,
-                    image : payload.patientInfo.profilePhoto ? payload.patientInfo.profilePhoto : patientData.profilePhoto,
-                }
+                    name: payload.patientInfo.name ? payload.patientInfo.name : patientData.name,
+                    image: payload.patientInfo.profilePhoto ? payload.patientInfo.profilePhoto : patientData.profilePhoto,
+                };
                 await tx.user.update({
                     where: {
-                        id: patientData.userId
+                        id: patientData.userId,
                     },
                     data: {
-                        ...userData
-                    }
+                        ...userData,
+                    },
                 });
-            };
-
-            
+            }
         }
 
         if (payload.patientHealthData) {
@@ -59,35 +221,35 @@ const updateMyProfile = async (user : IRequestUser , payload : IUpdatePatientPro
 
             await tx.patientHealthData.upsert({
                 where: {
-                    patientId: patientData.id
+                    patientId: patientData.id,
                 },
                 update: healthDataToSave,
                 create: {
                     patientId: patientData.id,
-                    ...healthDataToSave
-                }
-            })
+                    ...healthDataToSave,
+                },
+            });
         }
 
-        if(payload.medicalReports && Array.isArray(payload.medicalReports) && payload.medicalReports.length > 0){
-            for (const report of payload.medicalReports){
-                if(report.shouldDelete && report.reportId){
+        if (payload.medicalReports && Array.isArray(payload.medicalReports) && payload.medicalReports.length > 0) {
+            for (const report of payload.medicalReports) {
+                if (report.shouldDelete && report.reportId) {
                     const deletedReport = await tx.medicalReport.delete({
-                        where : {
-                            id : report.reportId,
-                        }
+                        where: {
+                            id: report.reportId,
+                        },
                     });
 
-                    if(deletedReport.reportLink){
+                    if (deletedReport.reportLink) {
                         await deleteFileFromCloudinary(deletedReport.reportLink);
                     }
-                }else if(report.reportName && report.reportLink){
+                } else if (report.reportName && report.reportLink) {
                     await tx.medicalReport.create({
-                        data : {
-                            patientId : patientData.id,
-                            reportName : report.reportName,
-                            reportLink : report.reportLink,
-                        }
+                        data: {
+                            patientId: patientData.id,
+                            reportName: report.reportName,
+                            reportLink: report.reportLink,
+                        },
                     });
                 }
             }
@@ -96,18 +258,22 @@ const updateMyProfile = async (user : IRequestUser , payload : IUpdatePatientPro
 
     const result = await prisma.patient.findUnique({
         where: {
-            id: patientData.id
+            id: patientData.id,
         },
         include: {
             user: true,
             patientHealthData: true,
             medicalReports: true,
-        }
+        },
     });
 
     return result;
 };
 
 export const PatientService = {
+    getAllPatients,
+    getPatientById,
+    updatePatient,
+    softDeletePatient,
     updateMyProfile,
-}
+};

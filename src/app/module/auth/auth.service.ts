@@ -173,14 +173,18 @@ const getMe = async (user: IRequestUser) => {
             },
             doctor: {
                 include: {
-                    specialties: true,
+                    specialties: {
+                        include: {
+                            specialty: true,
+                        },
+                    },
                     appointments: true,
                     reviews: true,
-
-                }
+                },
             },
-            admin: true
-        }
+            admin: true,
+            superAdmin: true,
+        },
     })
 
     if (!isUserExists) {
